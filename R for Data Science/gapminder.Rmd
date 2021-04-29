@@ -1,0 +1,60 @@
+---
+title: "Gapminder Analysis"
+author: "Simon Levy"
+date: "29 4 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+library(plotly)
+```
+
+## Analysis of the Gapminder dataset
+
+```{r Question 1}
+gapminder <- read_csv("gapminder_clean.csv")
+glimpse(gapminder)
+
+gapminder$X1 <- NULL
+glimpse(gapminder)
+```
+
+
+
+```{r Question 2}
+gapminder %>%
+  filter(Year == 1962) %>%
+  drop_na(`CO2 emissions (metric tons per capita)`, gdpPercap) %>%
+  ggplot(mapping = aes(x = `CO2 emissions (metric tons per capita)`, y = gdpPercap)) + # Backticks allow using variable names with spaces
+  geom_point()
+```
+
+```{r Question 3}
+gapminder_1962 <- gapminder %>%
+  filter(Year == 1962) %>%
+  drop_na(`CO2 emissions (metric tons per capita)`, gdpPercap)
+
+cor_res <- cor.test(gapminder_1962$`CO2 emissions (metric tons per capita)`, gapminder_1962$gdpPercap, method = "pearson")
+cat(paste0("The Pearson R value for the correlation between CO2 emissions and GDP per captia in 1962 is: ", cor_res[["estimate"]], 
+           "\nThe associated p-value for that correlation is: ", cor_res[["p.value"]]))
+```
+
+```{r Question 4}
+gapminder %>%
+  group_by(Year) %>%
+  drop_na(`CO2 emissions (metric tons per capita)`, gdpPercap) %>%
+  summarize(correlation = cor(`CO2 emissions (metric tons per capita)`, gdpPercap)) %>%
+  arrange(desc(correlation))
+```
+
+
+```{r Question 5}
+gapminder_1967 <- gapminder %>%
+  filter(Year == 1967)
+
+ggplot(data = gapminder_1967, mapping = aes(x = `CO2 emissions (metric tons per capita)`, y = gdpPercap)) +
+  geom_point()
+```
