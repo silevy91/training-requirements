@@ -53,8 +53,71 @@ gapminder %>%
 
 ```{r Question 5}
 gapminder_1967 <- gapminder %>%
-  filter(Year == 1967)
+  filter(Year == 1967) %>%
+  drop_na(`CO2 emissions (metric tons per capita)`, gdpPercap, continent, pop)
 
-ggplot(data = gapminder_1967, mapping = aes(x = `CO2 emissions (metric tons per capita)`, y = gdpPercap)) +
-  geom_point()
+plot <- ggplot(data = gapminder_1967, 
+               mapping = aes(x = `CO2 emissions (metric tons per capita)`, 
+                             y = gdpPercap, color = continent, 
+                             size = pop, label = `Country Name`)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  ylab("GDP per capita") +
+  labs(title = "CO2 emissions vs. GDP per capita in 1967") +
+  theme(legend.title = element_blank())
+
+ggplotly(plot, tooltip = "label")
+```
+
+
+```{r Question 6, fig.height=11, fig.width=8.5}
+gapminder %>%
+  drop_na(continent, `Energy use (kg of oil equivalent per capita)`) %>%
+  filter(Year >1967) %>%
+  group_by(Year, continent) %>%
+  mutate(Energy_Use_Mean = mean(`Energy use (kg of oil equivalent per capita)`)) %>%
+  mutate(Energy_Use_SEM = sd(`Energy use (kg of oil equivalent per capita)`)/sqrt(n())) %>%
+  ggplot(mapping = aes(x = continent, y = `Energy use (kg of oil equivalent per capita)`)) + 
+  facet_wrap(~ Year, scales = "free") +
+  geom_bar(stat = "summary", fun = "mean") +
+  geom_errorbar(aes(ymin = Energy_Use_Mean - Energy_Use_SEM, ymax = Energy_Use_Mean + Energy_Use_SEM)) +
+  stat_compare_means(method = "anova", label.x = 2) +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r Question 7, fig.height=5.5, fig.width=4.25}
+gapminder %>%
+  filter(Year > 1990) %>%
+  filter(continent %in% c("Europe", "Asia")) %>%
+  drop_na(`Imports of goods and services (% of GDP)`) %>%
+  group_by(Year, continent) %>%
+  mutate(Avg_Imports = mean(`Imports of goods and services (% of GDP)`)) %>%
+  mutate(SEM_Imports = sd(`Imports of goods and services (% of GDP)`)/sqrt(n())) %>%
+  ggplot(mapping = aes(x = continent, y = `Imports of goods and services (% of GDP)`)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  facet_wrap(~ Year, scales = "free") +
+  geom_errorbar(aes(ymin = Avg_Imports - SEM_Imports, ymax = Avg_Imports + SEM_Imports)) +
+  stat_compare_means(method = "t.test", label = "p.signif", comparisons = list(c("Asia", "Europe")))
+```
+
+```{r Question 8}
+gapminder %>%
+  drop_na(`Population density (people per sq. km of land area)`) %>%
+  select(`Population density (people per sq. km of land area)`, Year, `Country Name`) %>%
+  group_by(Year) %>%
+  mutate(rank = min_rank(desc(`Population density (people per sq. km of land area)`))) %>%
+  group_by(`Country Name`) %>%
+  summarize(avg_rank = mean(rank)) %>%
+  arrange(avg_rank) %>%
+  mutate(rank_avg_rank = min_rank(avg_rank))
+```
+
+```{r Question 9}
+gapminder %>%
+  drop_na(`Life expectancy at birth, total (years)`) %>%
+  select(`Country Name`, Year, `Life expectancy at birth, total (years)`) %>%
+  pivot_wider(names_from = Year, values_from = `Life expectancy at birth, total (years)`) %>%
+  mutate(`Increase in life expectancy from 1962 to 2007` = `2007` - `1962`) %>%
+  arrange(desc(`Increase in life expectancy from 1962 to 2007`))
 ```
