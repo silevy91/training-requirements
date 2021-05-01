@@ -12,7 +12,12 @@ library(ggpubr)
 library(plotly)
 ```
 
-## Analysis of the Gapminder dataset
+# Analysis of the Gapminder dataset
+
+In this training, we'll analyze the gapminder dataset, which contains various demographic and economic metrics for many of the world's countries over time.
+
+## Question 1
+We'll start by reading in the data and inspecting it. We see a superfluous column "X1" that is just a duplicate of the row index so we remove it.
 
 ```{r Question 1}
 gapminder <- read_csv("gapminder_clean.csv")
@@ -22,15 +27,23 @@ gapminder$X1 <- NULL
 glimpse(gapminder)
 ```
 
-
+## Question 2
+We'll first restrict our analysis to the year 1962 and compare each country's CO2 emissions with its GDP per capita. Since both these quantities stretch several orders of magnitude, we'll plot them on logarithmic axes. We observe that there appears to be an overall positive correlation between these two metrics.
 
 ```{r Question 2}
 gapminder %>%
   filter(Year == 1962) %>%
   drop_na(`CO2 emissions (metric tons per capita)`, gdpPercap) %>%
-  ggplot(mapping = aes(x = `CO2 emissions (metric tons per capita)`, y = gdpPercap)) + # Backticks allow using variable names with spaces
+  ggplot(mapping = aes(x = `CO2 emissions (metric tons per capita)`, y = gdpPercap)) +# Backticks allow using variable names with spaces
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(title = "CO2 emissions vs. GDP per capita in 1962") +
+  ylab("GDP per capita") +
   geom_point()
 ```
+
+## Question3 
+In order to quantify the relationship between CO2 emissions and GDP per captia, we calculate the Pearson's R value and its associated p-value. We conclude from the very small p-value that we have extreme confidence in the positive correlation.
 
 ```{r Question 3}
 gapminder_1962 <- gapminder %>%
@@ -42,6 +55,9 @@ cat(paste0("The Pearson R value for the correlation between CO2 emissions and GD
            "\nThe associated p-value for that correlation is: ", cor_res[["p.value"]]))
 ```
 
+## Question 4
+Given the correlation between CO2 emissions and GDP per capita in the year 1962, we next ask what year in the dataset had the strongest correlation between these two metrics. By grouping the data by year and calculating the Pearson's R value for each year, we can determine that the strongest correlation was in the year 1967.
+
 ```{r Question 4}
 gapminder %>%
   group_by(Year) %>%
@@ -50,6 +66,8 @@ gapminder %>%
   arrange(desc(correlation))
 ```
 
+## Question 5
+We now focus on the year 1967 and visualize the relationship in some more detail for this year. As we can see from the interactive plot, European nations tend to be situated at the top right corner of the graph, indicating high CO2 emissions and GDP per capita, which is consistent with most European nations' status as industrialized powers. Conversely African countries tend to cluster in the low-emissions, low-GDP per capita area of the graph due to their status as developing nations, and American countries, with the exception of the USA and Canada, occupy an intermediate position.
 
 ```{r Question 5}
 gapminder_1967 <- gapminder %>%
@@ -70,6 +88,8 @@ plot <- ggplot(data = gapminder_1967,
 ggplotly(plot, tooltip = "label")
 ```
 
+## Question 6
+We now turn our attention to the mean energy consumption per continent over the years. Grouping the dataset by year and continent allows us to visualize the difference in average energy consumption between continents. The first two years were omitted due to very little data being available for Africa and the Americas for those timepoints. We can determine from the graphs, as well as the low p-values associated with ANOVA analyses, that there is a significant difference in mean energy consumption between continents at all timepoints. 
 
 ```{r Question 6, fig.height=11, fig.width=8.5}
 gapminder %>%
@@ -86,6 +106,9 @@ gapminder %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
+## Question 7
+We will next focus on imported goods in Europe and Asia after 1990. At none of the years after 1990 in the dataset was there a significant difference in mean imported goods as a percentage of GDP between Europe and Asia. This indicates that, on average, both continents spent a similar proportion of their economic power on the purchase of goods from abroad.
+
 ```{r Question 7, fig.height=5.5, fig.width=4.25}
 gapminder %>%
   filter(Year > 1990) %>%
@@ -101,6 +124,9 @@ gapminder %>%
   stat_compare_means(method = "t.test", label = "p.signif", comparisons = list(c("Asia", "Europe")))
 ```
 
+## Question 8
+This next analysis concerns itself with population density. Specifically, we're asking the question of which country had the highest population density throughout the years. For this, we rank the countries by population density in each year for which we have data, and then we calculate an average rank for each country. The resulting table tells us that Macao and Monaco are tied for the country with the highest average population density.
+
 ```{r Question 8}
 gapminder %>%
   drop_na(`Population density (people per sq. km of land area)`) %>%
@@ -109,9 +135,11 @@ gapminder %>%
   mutate(rank = min_rank(desc(`Population density (people per sq. km of land area)`))) %>%
   group_by(`Country Name`) %>%
   summarize(avg_rank = mean(rank)) %>%
-  arrange(avg_rank) %>%
-  mutate(rank_avg_rank = min_rank(avg_rank))
+  arrange(avg_rank)
 ```
+
+## Question 9
+Lastly, we would like to know which country saw its life expectancy increase the most from 1962 to 2007. For this we will eliminate all countries with no life expectancy data in 1962 and calculate the increase between then and 2007. The resulting table tells us that the Maldives have seen the greatest improvement, with life expectancy rising by almost 37 years since 1962.
 
 ```{r Question 9}
 gapminder %>%
@@ -119,5 +147,6 @@ gapminder %>%
   select(`Country Name`, Year, `Life expectancy at birth, total (years)`) %>%
   pivot_wider(names_from = Year, values_from = `Life expectancy at birth, total (years)`) %>%
   mutate(`Increase in life expectancy from 1962 to 2007` = `2007` - `1962`) %>%
+  select(`Country Name`, `1962`, `2007`, `Increase in life expectancy from 1962 to 2007`) %>%
   arrange(desc(`Increase in life expectancy from 1962 to 2007`))
 ```
