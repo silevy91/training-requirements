@@ -8,7 +8,7 @@ player_move <- function(){
     } else if(input_row == "1" | input_row == "2" | input_row == "3") {
       input_row <- as.numeric(input_row)
     } else {
-      cat("Invalid input. Please only enter 1, 2, 3, or quit")
+      cat("Invalid input. Please only enter 1, 2, 3, or quit \n")
       next
     }
       
@@ -19,7 +19,7 @@ player_move <- function(){
     } else if(input_column == "1" | input_column == "2" | input_column == "3") {
       input_column <- as.numeric(input_column)
     } else {
-      cat("Invalid input. Please only enter 1, 2, 3, or quit")
+      cat("Invalid input. Please only enter 1, 2, 3, or quit \n")
       next
     }
     
@@ -28,7 +28,7 @@ player_move <- function(){
       current_board[input_row, input_column] <<- user_symbol
       break
     } else {
-      cat("This field has already been filled. Please select an empty field.")
+      cat("This field has already been filled. Please select an empty field. \n")
       next
     }
   }
@@ -87,7 +87,7 @@ while(TRUE) {
     pc_symbol <- "X"
     break
   } else {
-    cat("Invalid entry. Please only enter X, O, or quit")
+    cat("Invalid entry. Please only enter X, O, or quit \n")
     next
   }
 }
